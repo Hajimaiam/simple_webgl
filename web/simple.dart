@@ -91,8 +91,8 @@ void main() {
     _gl.uniformMatrix4fv(_shader['uProjection'], false, _projection.storage);
     
     _gl.bindBuffer(webgl.ARRAY_BUFFER, _vbo);
-    _gl.vertexAttribPointer(0, 3, webgl.FLOAT, false, 0, 0);
-    _gl.vertexAttribPointer(1, 3, webgl.FLOAT, false, 0, 0);
+    _gl.vertexAttribPointer(0, 3, webgl.FLOAT, false, 4*3, 4*0);
+    _gl.vertexAttribPointer(1, 3, webgl.FLOAT, false, 4*3, 4*3);
     _gl.enableVertexAttribArray(0);
     _gl.enableVertexAttribArray(1);
 
