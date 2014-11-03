@@ -1,0 +1,6 @@
+name: simple_webgl
+description: Simple WebGL template
+dependencies:
+  browser: any
+  vector_math:
+    git: https://github.com/johnmccutchan/vector_math
