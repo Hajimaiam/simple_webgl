@@ -63,8 +63,8 @@ void main() {
   void _initGeometry() {
     // 3 vertices * 2 attributes * 3 elements = 18 
     var buffer = new Float32List(18);
-    var bufPos = new Vector3List.view(buffer, 0, 3);
-    var bufCol = new Vector3List.view(buffer, 3, 3);
+    var bufPos = new Vector3List.view(buffer, 0, 6);
+    var bufCol = new Vector3List.view(buffer, 3, 6);
     
     bufPos[0] = new Vector3(-0.5, -0.5, 0.0);
     bufPos[1] = new Vector3( 0.5, -0.5, 0.0);
@@ -91,8 +91,8 @@ void main() {
     _gl.uniformMatrix4fv(_shader['uProjection'], false, _projection.storage);
     
     _gl.bindBuffer(webgl.ARRAY_BUFFER, _vbo);
-    _gl.vertexAttribPointer(0, 3, webgl.FLOAT, false, 4*3, 4*0);
-    _gl.vertexAttribPointer(1, 3, webgl.FLOAT, false, 4*3, 4*3);
+    _gl.vertexAttribPointer(0, 3, webgl.FLOAT, false, 4*6, 4*0);
+    _gl.vertexAttribPointer(1, 3, webgl.FLOAT, false, 4*6, 4*3);
     _gl.enableVertexAttribArray(0);
     _gl.enableVertexAttribArray(1);
 
