@@ -20,7 +20,7 @@ class SimpleScene {
     _gl     = canvas.getContext("webgl");
   
     _projection = new Matrix4.identity();
-    
+
     _initShaders();
     _initGeometry();
     
@@ -33,12 +33,10 @@ class SimpleScene {
     String vertSource = """
 precision mediump int;
 precision mediump float;
-
 attribute vec3 aPosition;
 attribute vec3 aColor;
 uniform mat4 uProjection;
 varying vec3 vColor;
-
 void main() {
   gl_Position = uProjection * vec4(aPosition, 1.0);
   vColor = aColor;
@@ -48,9 +46,7 @@ void main() {
     String fragSource = """
 precision mediump int;
 precision mediump float;
-
 varying vec3 vColor;
-
 void main() {
   gl_FragColor = vec4(vColor, 1.0);
 }
@@ -61,18 +57,29 @@ void main() {
   }
   
   void _initGeometry() {
-    // 3 vertices * 2 attributes * 3 elements = 18 
-    var buffer = new Float32List(18);
-    var bufPos = new Vector3List.view(buffer, 0, 6);
-    var bufCol = new Vector3List.view(buffer, 3, 6);
-    
-    bufPos[0] = new Vector3(-0.5, -0.5, 0.0);
-    bufPos[1] = new Vector3( 0.5, -0.5, 0.0);
-    bufPos[2] = new Vector3( 0.0,  0.5, 0.0);
-    
-    bufCol[0] = new Vector3(1.0, 0.0, 0.0);
-    bufCol[1] = new Vector3(0.0, 1.0, 0.0);
-    bufCol[2] = new Vector3(0.0, 0.0, 1.0);
+    var buffer = new Float32List(6*3+6*4);
+    var triPos = new Vector3List.view(buffer, 0, 6);
+    var triCol = new Vector3List.view(buffer, 3, 6);
+    var squPos = new Vector3List.view(buffer, 6*3, 6);
+    var squCol = new Vector3List.view(buffer, 6*3+3, 6);
+    // triangle vertices
+    triPos[0] = new Vector3( 0.0,  1.0, -0.5);
+    triPos[1] = new Vector3(-1.0, -1.0, -0.5);
+    triPos[2] = new Vector3( 1.0, -1.0, -0.5);
+    // triangle verticies colors
+    triCol[0] = new Vector3(0.0, 1.0, 0.0);
+    triCol[1] = new Vector3(0.0, 1.0, 0.0);
+    triCol[2] = new Vector3(0.0, 1.0, 0.0);
+    // square vertices
+    squPos[0] = new Vector3( 0.5,  0.5, -1.0);
+    squPos[1] = new Vector3(-0.5,  0.5, -1.0);
+    squPos[2] = new Vector3( 0.5, -0.5, -1.0);
+    squPos[3] = new Vector3(-0.5, -0.5, -1.0);
+    // square vertices colors
+    squCol[0] = new Vector3(1.0, 1.0, 1.0);
+    squCol[1] = new Vector3(1.0, 0.0, 0.0);
+    squCol[2] = new Vector3(0.0, 1.0, 0.0);
+    squCol[3] = new Vector3(0.0, 0.0, 1.0);
     
     _vbo = _gl.createBuffer();
     _gl.bindBuffer(webgl.ARRAY_BUFFER, _vbo);
@@ -95,8 +102,9 @@ void main() {
     _gl.vertexAttribPointer(1, 3, webgl.FLOAT, false, 4*6, 4*3);
     _gl.enableVertexAttribArray(0);
     _gl.enableVertexAttribArray(1);
-
     _gl.drawArrays(webgl.TRIANGLES, 0, 3);
+    
+    _gl.drawArrays(webgl.TRIANGLE_STRIP, 6, 4);
   }
 }
 
@@ -120,4 +128,3 @@ void draw(double time) {
   
   scheduleDraw();
 }
-
