@@ -104,7 +104,7 @@ void main() {
     _gl.enableVertexAttribArray(1);
     _gl.drawArrays(webgl.TRIANGLES, 0, 3);
     
-    _gl.drawArrays(webgl.TRIANGLE_STRIP, 6, 4);
+    _gl.drawArrays(webgl.TRIANGLE_STRIP, 3, 4);
   }
 }
 
