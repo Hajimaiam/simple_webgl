@@ -9,7 +9,7 @@ import 'shader.dart';
 class SimpleScene {
   int _width, _height;
   webgl.RenderingContext _gl;
-  webgl.Buffer _vbo;
+  webgl.Buffer _vbo, _ebo;
   Shader _shader;
   Matrix4 _projection;
   double lastTime = 0.0;
@@ -85,6 +85,15 @@ void main() {
     _vbo = _gl.createBuffer();
     _gl.bindBuffer(webgl.ARRAY_BUFFER, _vbo);
     _gl.bufferDataTyped(webgl.ARRAY_BUFFER, buffer, webgl.STATIC_DRAW);
+    
+    var elements = new Uint16List(3);
+    elements[0] = 0;
+    elements[1] = 1;
+    elements[2] = 2;
+
+    _ebo = _gl.createBuffer();
+    _gl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, _ebo);
+    _gl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, elements, webgl.STATIC_DRAW);
   }
   
   void animate(double time) {
@@ -99,16 +108,15 @@ void main() {
     _gl.uniformMatrix4fv(_shader['uProjection'], false, _projection.storage);
     
     _gl.bindBuffer(webgl.ARRAY_BUFFER, _vbo);
+    _gl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, _ebo);
     _gl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
     
     _gl.vertexAttribPointer(0, 3, webgl.FLOAT, false, 4*6, 4*0);
     _gl.vertexAttribPointer(1, 3, webgl.FLOAT, false, 4*6, 4*3);
     _gl.enableVertexAttribArray(0);
     _gl.enableVertexAttribArray(1);
-    var elements = new Float32List(3);
-    elements = [0, 1, 2];
-    _gl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, elements, webgl.STATIC_DRAW);
-    _gl.drawElements(webgl.TRIANGLES, 3, webgl.FLOAT, 0);
+
+    _gl.drawElements(webgl.TRIANGLES, 3, webgl.UNSIGNED_SHORT, 0);
     //_gl.drawArrays(webgl.TRIANGLES, 0, 3);
     
     //_gl.drawArrays(webgl.TRIANGLE_STRIP, 3, 4);
