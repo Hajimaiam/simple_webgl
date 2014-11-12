@@ -78,16 +78,16 @@ void main() {
     // square vertices
     pos[3] = new Vector3( 0.5,  0.5, -1.0);
     pos[4] = new Vector3(-0.5,  0.5, -1.0);
-    pos[5] = new Vector3(-0.5, -0.5, -1.0);
-    pos[6] = new Vector3( 0.5, -0.5, -1.0);
+    pos[5] = new Vector3( 0.5, -0.5, -1.0);
+    pos[6] = new Vector3(-0.5, -0.5, -1.0);
     // square vertices colors
     col[3] = new Vector3(1.0, 1.0, 1.0);
     col[4] = new Vector3(1.0, 0.0, 0.0);
     col[5] = new Vector3(0.0, 1.0, 0.0);
     col[6] = new Vector3(0.0, 0.0, 1.0);
     // square element list
-    elem[3] = 3; elem[4] = 4; elem[5] = 5;
-    elem[6] = 5; elem[7] = 6; elem[8] = 3;
+    elem[3] = 3; elem[4] = 4; elem[5] = 6;
+    elem[6] = 6; elem[7] = 5; elem[8] = 3;
     
     _vbo = _gl.createBuffer();
     _gl.bindBuffer(webgl.ARRAY_BUFFER, _vbo);
@@ -118,7 +118,7 @@ void main() {
     _gl.enableVertexAttribArray(0);
     _gl.enableVertexAttribArray(1);
 
-    _gl.drawElements(webgl.TRIANGLES, 3, webgl.UNSIGNED_SHORT, 0);
+    //_gl.drawElements(webgl.TRIANGLES, 3, webgl.UNSIGNED_SHORT, 0);
     //_gl.drawArrays(webgl.TRIANGLES, 0, 3);
     
     _gl.drawElements(webgl.TRIANGLES, 6, webgl.UNSIGNED_SHORT, 3*2);
