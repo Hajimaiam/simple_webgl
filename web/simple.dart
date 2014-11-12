@@ -59,41 +59,43 @@ void main() {
   
   void _initGeometry() {
     var buffer = new Float32List(6*3+6*4);
-    var triPos = new Vector3List.view(buffer, 0, 6);
-    var triCol = new Vector3List.view(buffer, 3, 6);
-    var squPos = new Vector3List.view(buffer, 6*3, 6);
-    var squCol = new Vector3List.view(buffer, 6*3+3, 6);
+    var ebuffer = new Uint16List(6*1+6*2);
+    var pos = new Vector3List.view(buffer, 0, 6);
+    var col = new Vector3List.view(buffer, 3, 6);
+    var elem = new Uint16List.view(ebuffer.buffer, 0, 3*3);
+    
     // triangle vertices
-    triPos[0] = new Vector3( 0.0,  1.0, -1.0);
-    triPos[1] = new Vector3(-1.0, -1.0, -1.0);
-    triPos[2] = new Vector3( 1.0, -1.0, -1.0);
+    pos[0] = new Vector3( 0.0,  1.0, -0.5);
+    pos[1] = new Vector3(-1.0, -1.0, -0.5);
+    pos[2] = new Vector3( 1.0, -1.0, -0.5);
     // triangle vertices colors
-    triCol[0] = new Vector3(0.0, 1.0, 0.0);
-    triCol[1] = new Vector3(0.0, 1.0, 0.0);
-    triCol[2] = new Vector3(0.0, 1.0, 0.0);
+    col[0] = new Vector3(0.0, 1.0, 0.0);
+    col[1] = new Vector3(0.0, 1.0, 0.0);
+    col[2] = new Vector3(0.0, 1.0, 0.0);
+    // triangle element list
+    elem[0] = 0; elem[1] = 1; elem[2] = 2;
+    
     // square vertices
-    squPos[0] = new Vector3( 0.5,  0.5, -0.5);
-    squPos[1] = new Vector3(-0.5,  0.5, -0.5);
-    squPos[2] = new Vector3( 0.5, -0.5, -0.5);
-    squPos[3] = new Vector3(-0.5, -0.5, -0.5);
+    pos[3] = new Vector3( 0.5,  0.5, -1.0);
+    pos[4] = new Vector3(-0.5,  0.5, -1.0);
+    pos[5] = new Vector3(-0.5, -0.5, -1.0);
+    pos[6] = new Vector3( 0.5, -0.5, -1.0);
     // square vertices colors
-    squCol[0] = new Vector3(1.0, 1.0, 1.0);
-    squCol[1] = new Vector3(1.0, 0.0, 0.0);
-    squCol[2] = new Vector3(0.0, 1.0, 0.0);
-    squCol[3] = new Vector3(0.0, 0.0, 1.0);
+    col[3] = new Vector3(1.0, 1.0, 1.0);
+    col[4] = new Vector3(1.0, 0.0, 0.0);
+    col[5] = new Vector3(0.0, 1.0, 0.0);
+    col[6] = new Vector3(0.0, 0.0, 1.0);
+    // square element list
+    elem[3] = 3; elem[4] = 4; elem[5] = 5;
+    elem[6] = 5; elem[7] = 6; elem[8] = 3;
     
     _vbo = _gl.createBuffer();
     _gl.bindBuffer(webgl.ARRAY_BUFFER, _vbo);
     _gl.bufferDataTyped(webgl.ARRAY_BUFFER, buffer, webgl.STATIC_DRAW);
     
-    var elements = new Uint16List(3);
-    elements[0] = 0;
-    elements[1] = 1;
-    elements[2] = 2;
-
     _ebo = _gl.createBuffer();
     _gl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, _ebo);
-    _gl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, elements, webgl.STATIC_DRAW);
+    _gl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, ebuffer, webgl.STATIC_DRAW);
   }
   
   void animate(double time) {
@@ -119,6 +121,7 @@ void main() {
     _gl.drawElements(webgl.TRIANGLES, 3, webgl.UNSIGNED_SHORT, 0);
     //_gl.drawArrays(webgl.TRIANGLES, 0, 3);
     
+    _gl.drawElements(webgl.TRIANGLES, 6, webgl.UNSIGNED_SHORT, 3*2);
     //_gl.drawArrays(webgl.TRIANGLE_STRIP, 3, 4);
   }
 }
