@@ -58,37 +58,64 @@ void main() {
   }
   
   void _initGeometry() {
-    var buffer = new Float32List(6*3+6*4);
-    var ebuffer = new Uint16List(6*1+6*2);
+    var buffer = new Float32List(6*5+6*8);
+    var ebuffer = new Uint16List(54);
     var pos = new Vector3List.view(buffer, 0, 6);
     var col = new Vector3List.view(buffer, 3, 6);
-    var elem = new Uint16List.view(ebuffer.buffer, 0, 3*3);
+    var elem = new Uint16List.view(ebuffer.buffer, 0, 54);
     
-    // triangle vertices
-    pos[0] = new Vector3( 0.0,  1.0, -0.5);
-    pos[1] = new Vector3(-1.0, -1.0, -0.5);
-    pos[2] = new Vector3( 1.0, -1.0, -0.5);
-    // triangle vertices colors
-    col[0] = new Vector3(0.0, 1.0, 0.0);
+    // pyramid vertices
+    pos[0] = new Vector3( 0.0,  0.5,  0.0);
+    pos[1] = new Vector3(-0.5, -0.5,  0.5);
+    pos[2] = new Vector3( 0.5, -0.5,  0.5);
+    pos[3] = new Vector3( 0.5, -0.5, -0.5);
+    pos[4] = new Vector3(-0.5, -0.5, -0.5);
+    // pyramid vertices colors
+    col[0] = new Vector3(1.0, 0.0, 0.0);
     col[1] = new Vector3(0.0, 1.0, 0.0);
-    col[2] = new Vector3(0.0, 1.0, 0.0);
-    // triangle element list
-    elem[0] = 0; elem[1] = 1; elem[2] = 2;
+    col[2] = new Vector3(0.0, 0.0, 1.0);
+    col[3] = new Vector3(1.0, 1.0, 0.0);
+    col[4] = new Vector3(1.0, 0.0, 1.0);
+    // pyramid element list
+    /* front */ elem[0] = 0;  elem[1] = 1;  elem[2] = 2;
+    /* right */ elem[3] = 0;  elem[4] = 2;  elem[5] = 3;
+    /* back */  elem[6] = 0;  elem[7] = 3;  elem[8] = 4;
+    /* left */  elem[9] = 0;  elem[10] = 4; elem[11] = 1;
+    /* base */  elem[12] = 1; elem[13] = 3; elem[14] = 2;
+                elem[15] = 1; elem[16] = 4; elem[17] = 3;
     
-    // square vertices
-    pos[3] = new Vector3( 0.5,  0.5, -1.0);
-    pos[4] = new Vector3(-0.5,  0.5, -1.0);
-    pos[5] = new Vector3( 0.5, -0.5, -1.0);
-    pos[6] = new Vector3(-0.5, -0.5, -1.0);
-    // square vertices colors
-    col[3] = new Vector3(1.0, 1.0, 1.0);
-    col[4] = new Vector3(1.0, 0.0, 0.0);
-    col[5] = new Vector3(0.0, 1.0, 0.0);
-    col[6] = new Vector3(0.0, 0.0, 1.0);
-    // square element list
-    elem[3] = 3; elem[4] = 4; elem[5] = 6;
-    elem[6] = 6; elem[7] = 5; elem[8] = 3;
-    
+    // cube vertices
+    pos[5] = new Vector3(-0.5,  0.5,  0.5);
+    pos[6] = new Vector3( 0.5,  0.5,  0.5);
+    pos[7] = new Vector3( 0.5,  0.5, -0.5);
+    pos[8] = new Vector3(-0.5,  0.5, -0.5);
+    pos[9] = new Vector3(-0.5, -0.5,  0.5);
+    pos[10] = new Vector3( 0.5, -0.5,  0.5);
+    pos[11] = new Vector3( 0.5, -0.5, -0.5);
+    pos[12] = new Vector3(-0.5, -0.5, -0.5);
+    // cube vertices colors
+    col[5] = new Vector3(1.0, 0.0, 0.0);
+    col[6] = new Vector3(0.0, 1.0, 0.0);
+    col[7] = new Vector3(0.0, 0.0, 1.0);
+    col[8] = new Vector3(1.0, 1.0, 0.0);
+    col[9] = new Vector3(1.0, 0.0, 1.0);
+    col[10] = new Vector3(0.0, 1.0, 1.0);
+    col[11] = new Vector3(1.0, 1.0, 1.0);
+    col[12] = new Vector3(0.5, 0.5, 0.5);
+    // cube element list
+    /* top */   elem[18] = 6;  elem[19] = 7;  elem[20] = 8;
+                elem[21] = 6;  elem[22] = 8;  elem[23] = 5;
+    /* front */ elem[24] = 6;  elem[25] = 5;  elem[26] = 9;
+                elem[27] = 6;  elem[28] = 9;  elem[29] = 10;
+    /* right */ elem[30] = 6;  elem[31] = 10; elem[32] = 11;
+                elem[33] = 6;  elem[34] = 11; elem[35] = 7;
+    /* back */  elem[36] = 7;  elem[37] = 11; elem[38] = 12;
+                elem[39] = 7;  elem[40] = 12; elem[41] = 8;
+    /* left */  elem[42] = 5;  elem[43] = 8;  elem[44] = 12;
+                elem[45] = 5;  elem[46] = 12; elem[47] = 9;
+    /* base */  elem[48] = 10; elem[49] = 9;  elem[50] = 12;
+                elem[51] = 10; elem[52] = 12; elem[53] = 11;
+            
     _vbo = _gl.createBuffer();
     _gl.bindBuffer(webgl.ARRAY_BUFFER, _vbo);
     _gl.bufferDataTyped(webgl.ARRAY_BUFFER, buffer, webgl.STATIC_DRAW);
@@ -99,7 +126,8 @@ void main() {
   }
   
   void animate(double time) {
-    _projection.rotateZ(0.001 * (time - lastTime));
+    _projection.rotateX(0.0002 * (time - lastTime));
+    _projection.rotateY(0.001 * (time - lastTime));
     lastTime = time;
   }
   
@@ -118,10 +146,12 @@ void main() {
     _gl.enableVertexAttribArray(0);
     _gl.enableVertexAttribArray(1);
 
+    _gl.drawElements(webgl.TRIANGLES, 54-18, webgl.UNSIGNED_SHORT, 18*2);
+    
     //_gl.drawElements(webgl.TRIANGLES, 3, webgl.UNSIGNED_SHORT, 0);
     //_gl.drawArrays(webgl.TRIANGLES, 0, 3);
     
-    _gl.drawElements(webgl.TRIANGLES, 6, webgl.UNSIGNED_SHORT, 3*2);
+    //_gl.drawElements(webgl.TRIANGLES, 6, webgl.UNSIGNED_SHORT, 3*2);
     //_gl.drawArrays(webgl.TRIANGLE_STRIP, 3, 4);
   }
 }
