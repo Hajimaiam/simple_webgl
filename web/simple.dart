@@ -36,11 +36,14 @@ precision mediump int;
 precision mediump float;
 attribute vec3 aPosition;
 attribute vec3 aColor;
+attribute vec3 aBrightness;
 uniform mat4 uProjection;
 varying vec3 vColor;
+varying vec3 vBrightness;
 void main() {
   gl_Position = uProjection * vec4(aPosition, 1.0);
   vColor = aColor;
+  vBrightness = aBrightness;
 }
     """;
     
@@ -48,20 +51,24 @@ void main() {
 precision mediump int;
 precision mediump float;
 varying vec3 vColor;
+vec3 newColor;
+varying vec3 vBrightness;
 void main() {
-  gl_FragColor = vec4(vColor, 1.0);
+  newColor = vec3(vColor[0] * vBrightness[0], vColor[1] * vBrightness[1], vColor[2] * vBrightness[2]);
+  gl_FragColor = vec4(newColor, 1.0);
 }
     """;
     
     _shader = new Shader(_gl, vertSource, fragSource, 
-        {'aPosition': 0, 'aColor': 1});
+        {'aPosition': 0, 'aColor': 1, 'aBrightness': 2});
   }
   
   void _initGeometry() {
-    var buffer = new Float32List(6*5+6*8);
+    var buffer = new Float32List(6*5+6*8+6*8);
     var ebuffer = new Uint16List(54);
-    var pos = new Vector3List.view(buffer, 0, 6);
-    var col = new Vector3List.view(buffer, 3, 6);
+    var pos = new Vector3List.view(buffer, 0, 9);
+    var col = new Vector3List.view(buffer, 3, 9);
+    var bri = new Vector3List.view(buffer, 6, 9);
     var elem = new Uint16List.view(ebuffer.buffer, 0, 54);
     
     // pyramid vertices
@@ -76,6 +83,12 @@ void main() {
     col[2] = new Vector3(0.0, 0.0, 1.0);
     col[3] = new Vector3(1.0, 1.0, 0.0);
     col[4] = new Vector3(1.0, 0.0, 1.0);
+    // pyramid brightness list
+    bri[0] = new Vector3(1.0, 1.0, 1.0);
+    bri[1] = new Vector3(1.0, 1.0, 1.0);
+    bri[2] = new Vector3(1.0, 1.0, 1.0);
+    bri[3] = new Vector3(1.0, 1.0, 1.0);
+    bri[4] = new Vector3(1.0, 1.0, 1.0);
     // pyramid element list
     /* front */ elem[0] = 0;  elem[1] = 1;  elem[2] = 2;
     /* right */ elem[3] = 0;  elem[4] = 2;  elem[5] = 3;
@@ -102,6 +115,15 @@ void main() {
     col[10] = new Vector3(0.0, 1.0, 1.0);
     col[11] = new Vector3(1.0, 1.0, 1.0);
     col[12] = new Vector3(0.5, 0.5, 0.5);
+    // cube brightness list
+    bri[5] = new Vector3(1.0, 1.0, 1.0);
+    bri[6] = new Vector3(1.0, 1.0, 1.0);
+    bri[7] = new Vector3(1.0, 1.0, 1.0);
+    bri[8] = new Vector3(1.0, 1.0, 1.0);
+    bri[9] = new Vector3(1.0, 1.0, 1.0);
+    bri[10] = new Vector3(1.0, 1.0, 1.0);
+    bri[11] = new Vector3(1.0, 1.0, 1.0);
+    bri[12] = new Vector3(1.0, 1.0, 1.0);
     // cube element list
     /* top */   elem[18] = 6;  elem[19] = 7;  elem[20] = 8;
                 elem[21] = 6;  elem[22] = 8;  elem[23] = 5;
