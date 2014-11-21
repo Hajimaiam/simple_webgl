@@ -12,6 +12,7 @@ class SimpleScene {
   webgl.Buffer _vbo, _ebo;
   Shader _shader;
   Matrix4 _projection;
+  
   double lastTime = 0.0;
   
   SimpleScene(CanvasElement canvas) {
@@ -36,14 +37,11 @@ precision mediump int;
 precision mediump float;
 attribute vec3 aPosition;
 attribute vec3 aColor;
-attribute vec3 aBrightness;
 uniform mat4 uProjection;
 varying vec3 vColor;
-varying vec3 vBrightness;
 void main() {
   gl_Position = uProjection * vec4(aPosition, 1.0);
   vColor = aColor;
-  vBrightness = aBrightness;
 }
     """;
     
@@ -51,16 +49,69 @@ void main() {
 precision mediump int;
 precision mediump float;
 varying vec3 vColor;
-vec3 newColor;
-varying vec3 vBrightness;
+uniform vec3 vBrightness;
 void main() {
-  newColor = vec3(vColor[0] * vBrightness[0], vColor[1] * vBrightness[1], vColor[2] * vBrightness[2]);
-  gl_FragColor = vec4(newColor, 1.0);
+  gl_FragColor = vec4(vColor * vBrightness, 1.0);
 }
     """;
     
     _shader = new Shader(_gl, vertSource, fragSource, 
-        {'aPosition': 0, 'aColor': 1, 'aBrightness': 2});
+        {'aPosition': 0, 'aColor': 1});
+  }
+  
+  void _gen4Poly(Float32List positions, Float32List normals, Uint16List elements, int longVert, int latVert, bool windCW) {
+    const pi2 = 3.1415926 * 2;
+    var pos = new List<double>();
+    var st;
+    var phiStep = pi2/longVert;
+    var thetaStep = pi2/latVert;
+    
+    // Locate vertex positions
+    for (var phi = 0; phi < pi2; phi+=phiStep) {
+      for (var theta = 0; theta < pi2; theta+=thetaStep) {
+        st = sin(theta);
+        pos.add(cos(phi)*st); // x
+        pos.add(sin(phi)*st); // y
+        pos.add(cos(theta));  // z
+      }
+    }
+    
+    var elem = new List<int>();
+    var pt1; var pt2; var pt3; var pt4;
+    
+    // Loop through each face and get element list
+    for (var p = 0; p < pos.length; p++) {
+     if (p < longVert) {
+       // top
+       if (windCW) {
+         pt1 = pos[p]; pt2 = pos[p+1]; pt3 = pos[p+2]; pt4 = pos[p+3];
+       } else {
+         pt1 = pos[p]; pt2 = pos[p+3]; pt3 = pos[p+2]; pt4 = pos[p+1];  
+       }
+     } else if (p < pos.length - longVert) {
+       // sides
+       if (windCW) {
+         pt1 = pos[p]; pt2 = pos[p+longVert]; pt3 = pos[p+longVert+1]; pt4 = pos[p+1];  
+       } else {
+         pt1 = pos[p]; pt2 = pos[p+1]; pt3 = pos[p+longVert+1]; pt4 = pos[p+longVert];
+       }
+     } else {
+       // bottom
+       if (windCW) {
+         pt1 = pos[p]; pt2 = pos[p+3]; pt3 = pos[p+2]; pt4 = pos[p+1];
+       } else {
+         pt1 = pos[p]; pt2 = pos[p+1]; pt3 = pos[p+2]; pt4 = pos[p+3];  
+       }       
+     }
+     // triangle 1
+     elem.add(pt1); elem.add(pt2); elem.add(pt3);
+     // triangle 2
+     elem.add(pt1); elem.add(pt3); elem.add(pt4);
+   }
+    
+    positions = new Float32List.fromList(pos);
+    normals = new Float32List.fromList(pos);
+    elements = new Uint16List.fromList(elements);
   }
   
   void _initGeometry() {
@@ -116,14 +167,14 @@ void main() {
     col[11] = new Vector3(1.0, 1.0, 1.0);
     col[12] = new Vector3(0.5, 0.5, 0.5);
     // cube brightness list
-    bri[5] = new Vector3(1.0, 1.0, 1.0);
-    bri[6] = new Vector3(1.0, 1.0, 1.0);
-    bri[7] = new Vector3(1.0, 1.0, 1.0);
-    bri[8] = new Vector3(1.0, 1.0, 1.0);
-    bri[9] = new Vector3(1.0, 1.0, 1.0);
-    bri[10] = new Vector3(1.0, 1.0, 1.0);
-    bri[11] = new Vector3(1.0, 1.0, 1.0);
-    bri[12] = new Vector3(1.0, 1.0, 1.0);
+    bri[5] = new Vector3(0.1, 0.1, 0.1);
+    bri[6] = new Vector3(0.2, 0.2, 0.2);
+    bri[7] = new Vector3(0.3, 0.3, 0.3);
+    bri[8] = new Vector3(0.3, 0.5, 0.0);
+    bri[9] = new Vector3(0.5, 0.1, 0.4);
+    bri[10] = new Vector3(0.5, 0.9, 1.0);
+    bri[11] = new Vector3(0.5, 1.0, 0.3);
+    bri[12] = new Vector3(1.0, 0.2, 0.8);
     // cube element list
     /* top */   elem[18] = 6;  elem[19] = 7;  elem[20] = 8;
                 elem[21] = 6;  elem[22] = 8;  elem[23] = 5;
@@ -158,6 +209,7 @@ void main() {
     
     _shader.use();
     _gl.uniformMatrix4fv(_shader['uProjection'], false, _projection.storage);
+    _gl.uniformMatrix4fv(_shader['uBrightness'], false, _projection.storage);
     
     _gl.bindBuffer(webgl.ARRAY_BUFFER, _vbo);
     _gl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, _ebo);
