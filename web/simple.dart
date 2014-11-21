@@ -59,7 +59,7 @@ void main() {
         {'aPosition': 0, 'aColor': 1});
   }
   
-  void _gen4Poly(Float32List positions, Float32List normals, Uint16List elements, int longVert, int latVert, bool windCW) {
+  void _Gen4Poly(Float32List positions, Float32List normals, Uint16List elements, int longVert, int latVert, bool windCW) {
     const pi2 = 3.1415926 * 2;
     var pos = new List<double>();
     var st;
@@ -84,23 +84,23 @@ void main() {
      if (p < longVert) {
        // top
        if (windCW) {
-         pt1 = pos[p]; pt2 = pos[p+1]; pt3 = pos[p+2]; pt4 = pos[p+3];
+         pt1 = p; pt2 = p+1; pt3 = p+2; pt4 = p+3;
        } else {
-         pt1 = pos[p]; pt2 = pos[p+3]; pt3 = pos[p+2]; pt4 = pos[p+1];  
+         pt1 = p; pt2 = p+3; pt3 = p+2; pt4 = p+1;
        }
      } else if (p < pos.length - longVert) {
        // sides
        if (windCW) {
-         pt1 = pos[p]; pt2 = pos[p+longVert]; pt3 = pos[p+longVert+1]; pt4 = pos[p+1];  
+         pt1 = p; pt2 = p+longVert; pt3 = p+longVert+1; pt4 = p+1;
        } else {
-         pt1 = pos[p]; pt2 = pos[p+1]; pt3 = pos[p+longVert+1]; pt4 = pos[p+longVert];
+         pt1 = p; pt2 = p+1; pt3 = p+longVert+1; pt4 = p+longVert;
        }
      } else {
        // bottom
        if (windCW) {
-         pt1 = pos[p]; pt2 = pos[p+3]; pt3 = pos[p+2]; pt4 = pos[p+1];
+         pt1 = p; pt2 = p+3; pt3 = p+2; pt4 = p+1;
        } else {
-         pt1 = pos[p]; pt2 = pos[p+1]; pt3 = pos[p+2]; pt4 = pos[p+3];  
+         pt1 = p; pt2 = p+1; pt3 = p+2; pt4 = p+3;
        }       
      }
      // triangle 1
