@@ -10,6 +10,7 @@ class SimpleScene {
   int _width, _height;
   webgl.RenderingContext _gl;
   webgl.Buffer _vbo, _ebo;
+  int _eboLength;
   Shader _shader;
   Matrix4 _projection;
   
@@ -37,8 +38,10 @@ precision mediump int;
 precision mediump float;
 attribute vec3 aPosition;
 attribute vec3 aColor;
+attribute vec3 aNormal;
 uniform mat4 uProjection;
 varying vec3 vColor;
+varying vec3 vNormal;
 void main() {
   gl_Position = uProjection * vec4(aPosition, 1.0);
   vColor = aColor;
@@ -49,30 +52,44 @@ void main() {
 precision mediump int;
 precision mediump float;
 varying vec3 vColor;
-uniform vec3 vBrightness;
+varying vec3 vNormal;
 void main() {
-  gl_FragColor = vec4(vColor * vBrightness, 1.0);
+  gl_FragColor = vec4(vColor, 1.0);
 }
     """;
     
     _shader = new Shader(_gl, vertSource, fragSource, 
-        {'aPosition': 0, 'aColor': 1});
+        {'aPosition': 0, 'aColor': 1, 'aNormal': 2});
   }
   
-  void _Gen4Poly(Float32List positions, Float32List normals, Uint16List elements, int longVert, int latVert, bool windCW) {
-    const pi2 = 3.1415926 * 2;
+  void _gen4Poly(List<double> positions, List<double> colors, List<double> normals, List<int> elements,
+                 int latSides, int longSides,
+                 bool windCW, bool faceNormals) {
+    var rng = new Random();
+    const pi = 3.1415926;
+    const pi2 = pi * 2;
+    var st; var x; var y; var z;
+    var long; var lat;
+    var phi; var theta;
+    var nPoints;
+    // Generate 4 points for face normals, else 1 point.
+    if (faceNormals) nPoints = 4; else nPoints = 1;
     var pos = new List<double>();
-    var st;
-    var phiStep = pi2/longVert;
-    var thetaStep = pi2/latVert;
+    var col = new List<double>();
     
     // Locate vertex positions
-    for (var phi = 0; phi < pi2; phi+=phiStep) {
-      for (var theta = 0; theta < pi2; theta+=thetaStep) {
+    for (var lat = 1; lat <= latSides; lat++) {
+     theta = pi / (latSides+1) * lat;
+     for (var long = 1; long <= longSides; long++) {
+        phi = pi2 / longSides * long;
+      
         st = sin(theta);
-        pos.add(cos(phi)*st); // x
-        pos.add(sin(phi)*st); // y
-        pos.add(cos(theta));  // z
+        x = cos(phi)*st; y = sin(phi)*st; z = cos(theta);
+        for (var i = 0; i < nPoints; i++) {
+          pos.add(x); pos.add(y); pos.add(z);
+          
+          col.add(rng.nextDouble()); col.add(rng.nextDouble()); col.add(rng.nextDouble());
+        }
       }
     }
     
@@ -80,48 +97,159 @@ void main() {
     var pt1; var pt2; var pt3; var pt4;
     
     // Loop through each face and get element list
-    for (var p = 0; p < pos.length; p++) {
-     if (p < longVert) {
-       // top
-       if (windCW) {
-         pt1 = p; pt2 = p+1; pt3 = p+2; pt4 = p+3;
-       } else {
-         pt1 = p; pt2 = p+3; pt3 = p+2; pt4 = p+1;
-       }
-     } else if (p < pos.length - longVert) {
-       // sides
-       if (windCW) {
-         pt1 = p; pt2 = p+longVert; pt3 = p+longVert+1; pt4 = p+1;
-       } else {
-         pt1 = p; pt2 = p+1; pt3 = p+longVert+1; pt4 = p+longVert;
-       }
-     } else {
-       // bottom
-       if (windCW) {
-         pt1 = p; pt2 = p+3; pt3 = p+2; pt4 = p+1;
-       } else {
-         pt1 = p; pt2 = p+1; pt3 = p+2; pt4 = p+3;
-       }       
-     }
-     // triangle 1
-     elem.add(pt1); elem.add(pt2); elem.add(pt3);
-     // triangle 2
-     elem.add(pt1); elem.add(pt3); elem.add(pt4);
-   }
+    var p;
     
-    positions = new Float32List.fromList(pos);
-    normals = new Float32List.fromList(pos);
-    elements = new Uint16List.fromList(elements);
+    // Get Top element list
+    p = 0;
+    if (windCW) {
+      pt1 = p; pt2 = p+1; pt3 = p+2; pt4 = p+3;
+    } else {
+      pt1 = p; pt2 = p+3; pt3 = p+2; pt4 = p+1;
+    }
+    // triangle 1
+    elem.add(pt1); elem.add(pt2); elem.add(pt3);
+    // triangle 2
+    elem.add(pt1); elem.add(pt3); elem.add(pt4);
+    
+    // Get Sides element list
+    for (p = 0; p < (latSides*longSides-longSides-1); p++) {
+      if (windCW) {
+        pt1 = p; pt2 = p+longSides; pt3 = p+longSides+1; pt4 = p+1;
+      } else {
+        pt1 = p; pt2 = p+1; pt3 = p+longSides+1; pt4 = p+longSides;
+      }
+      // triangle 1
+      elem.add(pt1); elem.add(pt2); elem.add(pt3);
+      // triangle 2
+      elem.add(pt1); elem.add(pt3); elem.add(pt4);      
+    }
+    
+    // Get Bottom element list
+    p = latSides*longSides-longSides;
+    if (windCW) {
+      pt1 = p; pt2 = p+3; pt3 = p+2; pt4 = p+1;
+    } else {
+      pt1 = p; pt2 = p+1; pt3 = p+2; pt4 = p+3;
+    }
+    // triangle 1
+    elem.add(pt1); elem.add(pt2); elem.add(pt3);
+    // triangle 2
+    elem.add(pt1); elem.add(pt3); elem.add(pt4);
+         
+    positions.clear(); positions.addAll(pos);
+    colors.clear(); colors.addAll(col);
+    normals.clear(); normals.addAll(pos);
+    elements.clear(); elements.addAll(elem);
+  }
+  
+  // Interleaves b into a, inserting at offset, for n items from b, and using stride in a.
+  // If a or b are too short for the astride or bitems, interleave truncating may occur.
+  List _interleave(List a, List b, int aoffset, int astride, int bitems) {
+    var c = new List<double>(a.length + b.length);
+    var ci; // c index
+    var ai; // a index
+    var ac; // a counter (for a interleaved items)
+    var bi; // b index
+    var bc; // b counter (for b interleaved items)
+    var state;
+    const stateEnd = -1; const stateFirst = 0; const stateCopya = 1; const stateCopyb = 2;
+    
+    // State machine which will interleave a and b
+    ci = 0; ai = 0; bi = 0;
+    state = stateFirst;
+    while (state != stateEnd) {
+      // iterate over each item in a and b in the machine
+      switch (state) {
+        case stateFirst:
+          if (ai == a.length) {
+            if (bi < b.length) {
+              state = stateCopyb;
+              bc = 0;
+            } else
+              state = stateEnd;
+          }
+          else {
+            if (ai < aoffset) {
+              c[ci++] = a[ai++];
+            } else {
+              state = stateCopyb;
+              bc = 0;
+            }
+          }
+          break;
+        case stateCopya:
+          if (ai == a.length) {
+            if (bi < b.length) {
+              state = stateCopyb;
+              bc = 0;
+            } else
+              state = stateEnd;
+          }
+          else {
+            if (ac < astride) {
+              c[ci++] = a[ai++];
+              ac++;
+            } else {
+              state = stateCopyb;
+              bc = 0;
+            }
+          }
+          break;
+        case stateCopyb:
+          if (bi == b.length) {
+            if (ai < a.length) {
+              state = stateCopyb;
+              ac = 0;
+            } else
+              state = stateEnd;
+          }
+          else {
+            if (bc < bitems) {
+              c[ci++] = b[bi++];
+              bc++;
+            } else {
+              state = stateCopya;
+              ac = 0;
+            }
+          }
+          break;
+      }
+    }
+
+    return c;
   }
   
   void _initGeometry() {
+    var buffer; var abuffer; var ebuffer;
+    var posBuffer = new List<double>();
+    var colBuffer = new List<double>();
+    var normBuffer = new List<double>();
+    var elemBuffer = new List<int>();
+    
+    _gen4Poly(posBuffer, colBuffer, normBuffer, elemBuffer, 10, 20, false, false);
+    buffer = _interleave(posBuffer, colBuffer, 3, 3, 3);
+    buffer = _interleave(buffer, normBuffer, 6, 6, 3);
+    abuffer = new Float32List.fromList(buffer);
+    ebuffer = new Uint16List.fromList(elemBuffer);
+    
+    _vbo = _gl.createBuffer();
+    _gl.bindBuffer(webgl.ARRAY_BUFFER, _vbo);
+    _gl.bufferDataTyped(webgl.ARRAY_BUFFER, abuffer, webgl.STATIC_DRAW);
+    
+    _ebo = _gl.createBuffer();
+    _gl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, _ebo);
+    _gl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, ebuffer, webgl.STATIC_DRAW);
+    _eboLength = ebuffer.length;
+  }
+  
+  void _initGeometry_old() {
     var buffer = new Float32List(6*5+6*8+6*8);
     var ebuffer = new Uint16List(54);
     var pos = new Vector3List.view(buffer, 0, 9);
     var col = new Vector3List.view(buffer, 3, 9);
     var bri = new Vector3List.view(buffer, 6, 9);
     var elem = new Uint16List.view(ebuffer.buffer, 0, 54);
-    
+
     // pyramid vertices
     pos[0] = new Vector3( 0.0,  0.5,  0.0);
     pos[1] = new Vector3(-0.5, -0.5,  0.5);
@@ -215,12 +343,14 @@ void main() {
     _gl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, _ebo);
     _gl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
     
-    _gl.vertexAttribPointer(0, 3, webgl.FLOAT, false, 4*6, 4*0);
-    _gl.vertexAttribPointer(1, 3, webgl.FLOAT, false, 4*6, 4*3);
+    _gl.vertexAttribPointer(0, 3, webgl.FLOAT, false, 4*9, 4*0);
+    _gl.vertexAttribPointer(1, 3, webgl.FLOAT, false, 4*9, 4*3);
+    _gl.vertexAttribPointer(2, 3, webgl.FLOAT, false, 4*9, 4*6);
     _gl.enableVertexAttribArray(0);
     _gl.enableVertexAttribArray(1);
+    _gl.enableVertexAttribArray(2);
 
-    _gl.drawElements(webgl.TRIANGLES, 54-18, webgl.UNSIGNED_SHORT, 18*2);
+    _gl.drawElements(webgl.TRIANGLES, _eboLength, webgl.UNSIGNED_SHORT, 0);
     
     //_gl.drawElements(webgl.TRIANGLES, 3, webgl.UNSIGNED_SHORT, 0);
     //_gl.drawArrays(webgl.TRIANGLES, 0, 3);
